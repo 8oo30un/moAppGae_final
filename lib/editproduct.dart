@@ -96,7 +96,7 @@ class _EditProductPageState extends State<EditProductPage> {
     });
 
     if (context.mounted) {
-      Navigator.pop(context);
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 

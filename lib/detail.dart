@@ -153,6 +153,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             return const Center(child: CircularProgressIndicator());
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
+          final Timestamp? createdAt = data['createdAt'];
+          final Timestamp? updatedAt = data['updatedAt'];
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -167,8 +169,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 const SizedBox(height: 8),
                 Text(data['description'] ?? ''),
                 const Divider(height: 24),
+                // ✅ 작성 정보 표시
                 Text('작성자 UID: ${data['uid']}'),
-                // 좋아요 상태 및 버튼
+                Text(
+                    '작성 시간: ${createdAt != null ? createdAt.toDate().toString() : '알 수 없음'}'),
+                Text(
+                    '수정 시간: ${updatedAt != null ? updatedAt.toDate().toString() : '알 수 없음'}'),
+
                 Row(
                   children: [
                     IconButton(

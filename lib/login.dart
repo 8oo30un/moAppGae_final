@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
           await FirebaseAuth.instance.signInWithCredential(credential);
       final user = userCredential.user;
 
-      if (user != null && mounted) {
+      if (user != null) {
         final docRef =
             FirebaseFirestore.instance.collection('users').doc(user.uid);
         final doc = await docRef.get();
@@ -42,13 +42,17 @@ class _LoginPageState extends State<LoginPage> {
           });
         }
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        if (!mounted) return;
+        Future.microtask(() {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+          );
+        });
       }
     } catch (e) {
       print('Google sign-in error: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to sign in with Google')),
       );
@@ -60,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
       final userCredential = await FirebaseAuth.instance.signInAnonymously();
       final user = userCredential.user;
 
-      if (user != null && mounted) {
+      if (user != null) {
         final docRef =
             FirebaseFirestore.instance.collection('users').doc(user.uid);
         final doc = await docRef.get();
@@ -72,13 +76,17 @@ class _LoginPageState extends State<LoginPage> {
           });
         }
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        if (!mounted) return;
+        Future.microtask(() {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+          );
+        });
       }
     } catch (e) {
       print('Anonymous sign-in error: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to sign in anonymously')),
       );
