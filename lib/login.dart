@@ -12,10 +12,24 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  bool _isSigningIn = false;
+
   Future<void> signInWithGoogle() async {
+    if (_isSigningIn) return;
+
+    setState(() {
+      _isSigningIn = true;
+    });
+
     try {
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        setState(() {
+          _isSigningIn = false;
+        });
+        return;
+      }
 
       final googleAuth = await googleUser.authentication;
 
@@ -43,23 +57,37 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (!mounted) return;
-        Future.microtask(() {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
+
+        setState(() {
+          _isSigningIn = false;
         });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
       }
     } catch (e) {
       print('Google sign-in error: $e');
       if (!mounted) return;
+
+      setState(() {
+        _isSigningIn = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign in with Google')),
+        const SnackBar(content: Text('Failed to sign in with Google')),
       );
     }
   }
 
   Future<void> signInAnonymously() async {
+    if (_isSigningIn) return;
+
+    setState(() {
+      _isSigningIn = true;
+    });
+
     try {
       final userCredential = await FirebaseAuth.instance.signInAnonymously();
       final user = userCredential.user;
@@ -77,18 +105,26 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (!mounted) return;
-        Future.microtask(() {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
+
+        setState(() {
+          _isSigningIn = false;
         });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
       }
     } catch (e) {
       print('Anonymous sign-in error: $e');
       if (!mounted) return;
+
+      setState(() {
+        _isSigningIn = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign in anonymously')),
+        const SnackBar(content: Text('Failed to sign in anonymously')),
       );
     }
   }
@@ -102,14 +138,26 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             ElevatedButton.icon(
               icon: const Icon(Icons.login),
-              label: const Text('Sign in with Google'),
-              onPressed: signInWithGoogle,
+              label: _isSigningIn
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Sign in with Google'),
+              onPressed: _isSigningIn ? null : signInWithGoogle,
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               icon: const Icon(Icons.person_outline),
-              label: const Text('Continue as Guest'),
-              onPressed: signInAnonymously,
+              label: _isSigningIn
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Continue as Guest'),
+              onPressed: _isSigningIn ? null : signInAnonymously,
             ),
           ],
         ),
