@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:shrine/detail.dart';
+import 'package:shrine/list.dart';
+import 'package:shrine/wishlist.dart';
 import 'addproduct.dart'; // AddProductPage가 들어있는 파일명
 
 class HomePage extends StatelessWidget {
@@ -63,12 +66,22 @@ class HomePage extends StatelessWidget {
         title: const Text('SHRINE'),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.search, semanticLabel: 'search'),
-            onPressed: () {},
+            icon: const Icon(Icons.shopping_cart), // 위시리스트 이동
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WishlistPage()),
+              );
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.tune, semanticLabel: 'filter'),
-            onPressed: () {},
+            icon: const Icon(Icons.add), // 제품 추가
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddProductPage()),
+              );
+            },
           ),
         ],
       ),
@@ -100,20 +113,21 @@ class HomePage extends StatelessWidget {
                     ),
                   );
                 },
-                child: _buildCard(data, theme),
+                child: Stack(
+                  children: [
+                    _buildCard(data, theme), // 기존 카드 UI
+                    if (context.watch<WishlistProvider>().isInWishlist(doc.id))
+                      const Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Icon(Icons.check_circle, color: Colors.orange),
+                      ),
+                  ],
+                ),
               );
             }).toList(),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddProductPage()),
-          );
-        },
-        child: const Icon(Icons.add),
       ),
       resizeToAvoidBottomInset: false,
     );

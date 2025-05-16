@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shrine/editproduct.dart';
 import 'package:shrine/wishlist.dart';
 import 'package:provider/provider.dart';
 
@@ -79,7 +80,68 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     // 기존 상세 UI 아래 좋아요 버튼만 추가된 형태
     return Scaffold(
-      appBar: AppBar(title: const Text('상품 상세')),
+      appBar: AppBar(
+        title: const Text('상품 상세'),
+        actions: [
+          FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('products')
+                .doc(widget.productId)
+                .get(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              final isOwner = data['uid'] == _currentUid;
+
+              if (!isOwner) return const SizedBox.shrink();
+
+              return Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              EditProductPage(productId: widget.productId),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('정말 삭제하시겠습니까?'),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('취소')),
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('삭제')),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await FirebaseFirestore.instance
+                            .collection('products')
+                            .doc(widget.productId)
+                            .delete();
+                        if (context.mounted) Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          )
+        ],
+      ),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance
             .collection('products')

@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddProductPage extends StatefulWidget {
   const AddProductPage({super.key});
@@ -20,6 +20,9 @@ class _AddProductPageState extends State<AddProductPage> {
   File? _imageFile;
   final picker = ImagePicker();
 
+  static const String defaultImageUrl =
+      'http://handong.edu/site/handong/res/img/logo.png';
+
   Future<void> _pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
@@ -33,7 +36,6 @@ class _AddProductPageState extends State<AddProductPage> {
     final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
     final storageRef =
         FirebaseStorage.instance.ref().child('product_images/$fileName');
-
     await storageRef.putFile(imageFile);
     return await storageRef.getDownloadURL();
   }
@@ -45,11 +47,11 @@ class _AddProductPageState extends State<AddProductPage> {
       return;
     }
 
-    final name = _nameController.text;
-    final price = int.tryParse(_priceController.text) ?? 0;
-    final description = _descriptionController.text;
+    final name = _nameController.text.trim();
+    final price = int.tryParse(_priceController.text.trim()) ?? 0;
+    final description = _descriptionController.text.trim();
 
-    String imageUrl = 'http://handong.edu/site/handong/res/img/logo.png';
+    String imageUrl = defaultImageUrl;
 
     if (_imageFile != null) {
       try {
@@ -79,21 +81,60 @@ class _AddProductPageState extends State<AddProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Product')),
+      appBar: AppBar(
+        title: const Text('Add'),
+        leadingWidth: 72,
+        leading: TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.only(left: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _saveProduct,
+            child: const Text(
+              'Save',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Column(
             children: [
+              // 항상 기본 이미지 보이기, 선택하면 덮어쓰기
               _imageFile != null
                   ? Image.file(_imageFile!, height: 150)
-                  : Image.network(
-                      'http://handong.edu/site/handong/res/img/logo.png',
-                      height: 150),
+                  : Image.network(defaultImageUrl, height: 150),
               const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _pickImage,
-                child: const Text('이미지 선택'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.camera_alt),
+                    tooltip: '이미지 선택',
+                  ),
+                ],
               ),
               TextField(
                 controller: _nameController,
@@ -107,11 +148,6 @@ class _AddProductPageState extends State<AddProductPage> {
               TextField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: '설명'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _saveProduct,
-                child: const Text('저장'),
               ),
             ],
           ),
